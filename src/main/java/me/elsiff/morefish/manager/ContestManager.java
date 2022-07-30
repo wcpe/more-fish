@@ -2,8 +2,9 @@ package me.elsiff.morefish.manager;
 
 import me.elsiff.morefish.CaughtFish;
 import me.elsiff.morefish.MoreFish;
-import org.bukkit.Material;
+import me.elsiff.morefish.util.StringActionUtil;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -15,8 +16,6 @@ import java.io.IOException;
 import java.util.*;
 
 public class ContestManager {
-    private static final String PREFIX_REWARD = "reward_";
-    private static final String PREFIX_CASH_PRIZE = "cash-prize_";
     private final MoreFish plugin;
     private final RecordComparator comparator = new RecordComparator();
     private final List<Record> recordList = new ArrayList<>();
@@ -81,7 +80,7 @@ public class ContestManager {
             recordList.add(new Record(id, fishName, length));
         }
 
-        Collections.sort(recordList, comparator);
+        recordList.sort(comparator);
     }
 
     public void saveRecords() {
@@ -146,59 +145,21 @@ public class ContestManager {
     }
 
     private void giveRewards() {
-        Set<Integer> receivers = new HashSet<>();
-
-        ItemStack[] rewards = getRewards();
-        for (int i = 0; i < rewards.length - 1 && i < recordList.size(); i++) {
-            ItemStack stack = rewards[i];
-
-            if (stack == null || stack.getType() == Material.AIR)
+        ConfigurationSection cfs = plugin.getConfig().getConfigurationSection("rank-reward");
+        for (String key : cfs.getKeys(false)) {
+            int rank = Integer.parseInt(key);
+            Record record = getRecord(rank);
+            if (record == null) {
                 continue;
-
-            OfflinePlayer player = getRecord(i + 1).getPlayer();
-            sendReward(player, stack);
-
-            receivers.add(i);
+            }
+            OfflinePlayer player = record.getPlayer();
+            sendReward(player, cfs.getStringList(key + ".string-action"));
         }
 
-        if (plugin.hasEconomy()) {
-            double[] cashPrizes = getCashPrizes();
-            for (int i = 0; i < cashPrizes.length - 1 && i < recordList.size(); i++) {
-                double amount = cashPrizes[i];
-
-                if (amount <= 0)
-                    continue;
-
-                OfflinePlayer player = getRecord(i + 1).getPlayer();
-                sendCashPrize(player, amount);
-
-                receivers.add(i);
-            }
-
-            if (cashPrizes[7] > 0) {
-                for (int i = 0; i < getRecordAmount(); i++) {
-                    if (receivers.contains(i))
-                        continue;
-
-                    Record record = getRecord(i + 1);
-
-                    sendCashPrize(record.getPlayer(), cashPrizes[7]);
-                }
-            }
-        }
-
-        if (rewards[7] != null) {
-            for (int i = 0; i < getRecordAmount(); i++) {
-                if (receivers.contains(i))
-                    continue;
-
-                Record record = getRecord(i + 1);
-                sendReward(record.getPlayer(), rewards[7]);
-            }
-        }
     }
 
-    private void sendReward(OfflinePlayer oPlayer, ItemStack stack) {
+
+    private void sendReward(OfflinePlayer oPlayer, List<String> stringAction) {
         if (!oPlayer.isOnline()) {
             plugin.getLogger().info(oPlayer.getName() + "'s reward of fishing contest has not been sent as the player is offline now.");
             return;
@@ -206,21 +167,7 @@ public class ContestManager {
 
         Player player = oPlayer.getPlayer();
 
-        if (player.getInventory().firstEmpty() != -1) {
-            player.getInventory().addItem(stack);
-        } else {
-            player.getWorld().dropItem(player.getLocation(), stack);
-        }
-
-        int number = getNumber(player);
-        String msg = plugin.getLocale().getString("reward");
-
-        msg = msg.replaceAll("%player%", player.getName())
-                .replaceAll("%item%", getItemName(stack))
-                .replaceAll("%ordinal%", plugin.getOrdinal(number))
-                .replaceAll("%number%", Integer.toString(number));
-
-        player.sendMessage(msg);
+        StringActionUtil.executionCommands(stringAction, false, player);
     }
 
     private void sendCashPrize(OfflinePlayer player, double amount) {
@@ -249,53 +196,6 @@ public class ContestManager {
                 item.getItemMeta().getDisplayName() : item.getType().name().toLowerCase().replaceAll("_", " "));
     }
 
-    public ItemStack[] getRewards() {
-        ItemStack[] rewards = new ItemStack[8];
-
-        for (String path : configRewards.getKeys(false)) {
-            if (!path.startsWith(PREFIX_REWARD))
-                continue;
-
-            int i = Integer.parseInt(path.substring(7));
-            ItemStack item = configRewards.getItemStack("reward_" + i);
-
-            rewards[i] = item;
-        }
-
-        return rewards;
-    }
-
-    public void setRewards(ItemStack[] rewards) {
-        for (int i = 0; i < rewards.length; i++) {
-            configRewards.set(PREFIX_REWARD + i, rewards[i]);
-        }
-
-        saveRewards();
-    }
-
-    public double[] getCashPrizes() {
-        double[] arr = new double[8];
-
-        for (String path : configRewards.getKeys(false)) {
-            if (!path.startsWith(PREFIX_CASH_PRIZE))
-                continue;
-
-            int i = Integer.parseInt(path.substring(11));
-            double amount = configRewards.getDouble("cash-prize_" + i);
-
-            arr[i] = amount;
-        }
-
-        return arr;
-    }
-
-    public void setCashPrizes(double[] arr) {
-        for (int i = 0; i < arr.length; i++) {
-            configRewards.set(PREFIX_CASH_PRIZE + i, arr[i]);
-        }
-
-        saveRewards();
-    }
 
     public boolean isNew1st(CaughtFish fish) {
         Record record = getRecord(1);
@@ -367,11 +267,13 @@ public class ContestManager {
 
     private class RecordComparator implements Comparator<Record> {
 
+        @Override
         public int compare(Record arg0, Record arg1) {
-            if (arg0.getLength() < arg1.getLength())
+            if (arg0.getLength() < arg1.getLength()) {
                 return 1;
-            else if ((arg0.getLength() > arg1.getLength()))
+            } else if ((arg0.getLength() > arg1.getLength())) {
                 return -1;
+            }
             return 0;
         }
     }

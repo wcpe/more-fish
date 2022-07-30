@@ -10,13 +10,17 @@ import org.bukkit.event.player.PlayerFishEvent;
 public class PlayerCatchCustomFishEvent extends PlayerEvent implements Cancellable {
     private static final HandlerList handlers = new HandlerList();
     private boolean cancelled;
-    private CaughtFish fish;
-    private PlayerFishEvent fishEvent;
+    private final CaughtFish fish;
+    private final PlayerFishEvent fishEvent;
 
     public PlayerCatchCustomFishEvent(Player who, CaughtFish fish, PlayerFishEvent fishEvent) {
         super(who);
         this.fish = fish;
         this.fishEvent = fishEvent;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlers;
     }
 
     public CaughtFish getFish() {
@@ -29,10 +33,6 @@ public class PlayerCatchCustomFishEvent extends PlayerEvent implements Cancellab
 
     @Override
     public HandlerList getHandlers() {
-        return handlers;
-    }
-
-    public static HandlerList getHandlerList() {
         return handlers;
     }
 

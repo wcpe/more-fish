@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class ItemBuilder {
-    private ItemStack item;
+    private final ItemStack item;
 
     public ItemBuilder(Material type) {
         this.item = new ItemStack(type);

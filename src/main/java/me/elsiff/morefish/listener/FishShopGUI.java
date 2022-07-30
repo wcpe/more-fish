@@ -31,7 +31,7 @@ public class FishShopGUI implements Listener {
         Inventory inv = plugin.getServer().createInventory(player, 36, title);
 
         ItemStack iconGlass = new ItemBuilder(Material.STAINED_GLASS_PANE, 1, (short) 3).setDisplayName("§r").build();
-        for (int i = 0; i < 9; i ++) {
+        for (int i = 0; i < 9; i++) {
             inv.setItem(27 + i, iconGlass);
         }
 
@@ -58,7 +58,7 @@ public class FishShopGUI implements Listener {
     private double getTotalPrice(Inventory inv) {
         double total = 0.0D;
 
-        for (int i = 0; i < 27; i ++) {
+        for (int i = 0; i < 27; i++) {
             ItemStack itemStack = inv.getItem(i);
 
             if (itemStack == null || itemStack.getType() == Material.AIR ||
@@ -109,7 +109,7 @@ public class FishShopGUI implements Listener {
                     }
 
                     boolean sold = false;
-                    for (int i = 0; i < 27; i ++) {
+                    for (int i = 0; i < 27; i++) {
                         ItemStack itemStack = event.getInventory().getItem(i);
 
                         if (itemStack == null || itemStack.getType() == Material.AIR ||
@@ -159,7 +159,7 @@ public class FishShopGUI implements Listener {
         if (users.contains(event.getPlayer().getUniqueId())) {
             users.remove(event.getPlayer().getUniqueId());
 
-            for (int i = 0; i < 27; i ++) {
+            for (int i = 0; i < 27; i++) {
                 ItemStack itemStack = event.getInventory().getItem(i);
 
                 if (itemStack == null || itemStack.getType() == Material.AIR ||

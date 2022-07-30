@@ -10,7 +10,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 public class SignListener implements Listener {
-    private MoreFish plugin;
+    private final MoreFish plugin;
 
     public SignListener(MoreFish plugin) {
         this.plugin = plugin;

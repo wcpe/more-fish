@@ -4,7 +4,7 @@ import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.trait.TraitInfo;
 
 public class CitizensHooker {
-    private TraitInfo fishShop;
+    private final TraitInfo fishShop;
 
     public CitizensHooker() {
         this.fishShop = TraitInfo.create(FishShopTrait.class).withName("fishshop");

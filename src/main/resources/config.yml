@@ -2,15 +2,20 @@
 # MoreFish Configuration by elsiff
 #
 # Wiki: https://github.com/elsiff/MoreFish/wiki
-#
-# Warning: DO NOT edit rewards.yml with your file editor, instead use in-game command '/mf rewards'.
-#
 
+shop-allow-click-id:
+  - '1:0'
+rank-reward:
+  "1":
+    string-action:
+      - '[CMD]say hello'
+  "2":
+    string-action:
+      - '[CMD]say hello'
 version: 210
 
 general:
   locale: 'en'
-  check-update: true
   auto-start: false
   use-boss-bar: true
   only-for-contest: false

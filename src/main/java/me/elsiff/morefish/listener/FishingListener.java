@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
@@ -22,6 +23,43 @@ public class FishingListener implements Listener {
     public FishingListener(MoreFish plugin) {
         this.plugin = plugin;
         this.contest = plugin.getContestManager();
+    }
+
+    public boolean isClick(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) {
+            return false;
+        }
+        for (String s : plugin.getConfig().getStringList("shop-allow-click-id")) {
+            String[] sSplit = s.split(":");
+            if (sSplit.length == 2) {
+                if (!"*".equals(sSplit[0]) && Integer.parseInt(sSplit[0]) != item.getTypeId()) {
+                    continue;
+                }
+                if (!"*".equals(sSplit[1]) && Integer.parseInt(sSplit[1]) != item.getData().getData()) {
+                    continue;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @EventHandler
+    public void on(InventoryClickEvent event) {
+        if (event.getInventory().getTitle().equals(plugin.getLocale().getString("shop-gui-title"))) {
+            if (event.getHotbarButton() != -1) {
+                event.setCancelled(true);
+            }
+            if (event.getClickedInventory() == event.getWhoClicked().getInventory()) {
+                if (event.getCursor().getType() != Material.AIR) {
+                    return;
+                }
+                if (isClick(event.getCurrentItem())) {
+                    return;
+                }
+                event.setCancelled(true);
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -41,6 +79,11 @@ public class FishingListener implements Listener {
 
             CaughtFish fish = plugin.getFishManager().generateRandomFish(event.getPlayer());
 
+            if (fish == null) {
+                event.getPlayer().sendMessage(plugin.getLocale().getString("fish-escape"));
+                event.setCancelled(true);
+                return;
+            }
 
             PlayerCatchCustomFishEvent customEvent = new PlayerCatchCustomFishEvent(event.getPlayer(), fish, event);
             plugin.getServer().getPluginManager().callEvent(customEvent);
@@ -81,7 +124,6 @@ public class FishingListener implements Listener {
                 contest.addRecord(event.getPlayer(), fish);
             }
 
-
             ItemStack itemStack = plugin.getFishManager().getItemStack(fish, event.getPlayer().getName());
             Item caught = (Item) event.getCaught();
             caught.setItemStack(itemStack);
@@ -89,12 +131,10 @@ public class FishingListener implements Listener {
     }
 
     private boolean hasEnabled(PlayerFishEvent event) {
-        boolean enabled = true;
+        boolean enabled = !plugin.getConfig().getStringList("general.contest-disabled-worlds")
+                .contains(event.getPlayer().getWorld().getName());
 
         // Check if the world hasn't disabled
-        if (plugin.getConfig().getStringList("general.contest-disabled-worlds")
-                .contains(event.getPlayer().getWorld().getName()))
-            enabled = false;
 
         // Check if the contest is ongoing
         if (plugin.getConfig().getBoolean("general.only-for-contest") &&

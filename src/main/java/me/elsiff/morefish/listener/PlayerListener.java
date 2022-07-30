@@ -11,7 +11,7 @@ import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 public class PlayerListener implements Listener {
-    private MoreFish plugin;
+    private final MoreFish plugin;
 
     public PlayerListener(MoreFish plugin) {
         this.plugin = plugin;
@@ -19,13 +19,6 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        if (event.getPlayer().isOp() && plugin.getConfig().getBoolean("general.check-update") &&
-                !plugin.getUpdateChecker().isUpToDate()) {
-            for (String msg : plugin.getLocale().getStringList("new-version")) {
-                event.getPlayer().sendMessage(String.format(msg, plugin.getUpdateChecker().getNewVersion()));
-            }
-        }
-
         if (plugin.hasBossBar() && plugin.getContestManager().hasStarted() && plugin.getContestManager().hasTimer()) {
             plugin.getBossBarManager().addPlayer(event.getPlayer());
         }
@@ -45,10 +38,12 @@ public class PlayerListener implements Listener {
 
                 int foodLevel = event.getPlayer().getFoodLevel() + effects.getPoints();
 
-                if (foodLevel < 0)
+                if (foodLevel < 0) {
                     foodLevel = 0;
-                if (foodLevel > 20)
+                }
+                if (foodLevel > 20) {
                     foodLevel = 20;
+                }
 
                 event.getPlayer().setFoodLevel(foodLevel);
             }

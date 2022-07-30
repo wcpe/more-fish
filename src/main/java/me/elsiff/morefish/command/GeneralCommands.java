@@ -21,6 +21,7 @@ public class GeneralCommands implements CommandExecutor, TabCompleter {
         this.contest = plugin.getContestManager();
     }
 
+    @Override
     public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
         List<String> list = new ArrayList<>();
 
@@ -30,7 +31,6 @@ public class GeneralCommands implements CommandExecutor, TabCompleter {
                 list.add("start");
                 list.add("stop");
                 list.add("clear");
-                list.add("rewards");
             }
 
             if (sender.hasPermission("morefish.top")) {
@@ -214,22 +214,6 @@ public class GeneralCommands implements CommandExecutor, TabCompleter {
             }
 
             return true;
-        } else if ("rewards".equalsIgnoreCase(args[0])) {
-            if (!(sender instanceof Player)) {
-                sender.sendMessage(plugin.getLocale().getString("in-game-command"));
-                return true;
-            }
-
-            Player player = (Player) sender;
-
-            if (!player.hasPermission("morefish.admin")) {
-                player.sendMessage(plugin.getLocale().getString("no-permission"));
-                return true;
-            }
-
-            plugin.getRewardsGUI().openGUI(player);
-
-            return true;
         } else if ("shop".equalsIgnoreCase(args[0])) {
             if (args.length < 2) {
                 if (!sender.hasPermission("morefish.shop")) {
@@ -288,7 +272,7 @@ public class GeneralCommands implements CommandExecutor, TabCompleter {
         String format = plugin.getLocale().getString("top-list");
         int limit = plugin.getConfig().getInt("messages.top-number");
 
-        for (int i = 1; i < limit + 1; i ++) {
+        for (int i = 1; i < limit + 1; i++) {
             ContestManager.Record record = contest.getRecord(i);
 
             if (record == null)

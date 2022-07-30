@@ -1,7 +1,7 @@
-name: MoreFish
-author: elsiff
+name: MoreFish-Reload
+author: ["elsiff","Wcpe"]
 website: http://elsiff.me
-version: ${project.version}
+version: ${version}
 main: me.elsiff.morefish.MoreFish
 softdepend: [Vault, Citizens, PlaceholderAPI, ProtocolLib, mcMMO, WorldGuard]
 commands:

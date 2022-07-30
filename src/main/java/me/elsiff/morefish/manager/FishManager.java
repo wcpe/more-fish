@@ -1,5 +1,6 @@
 package me.elsiff.morefish.manager;
 
+import lombok.val;
 import me.elsiff.morefish.CaughtFish;
 import me.elsiff.morefish.CustomFish;
 import me.elsiff.morefish.MoreFish;
@@ -7,6 +8,7 @@ import me.elsiff.morefish.Rarity;
 import me.elsiff.morefish.condition.*;
 import me.elsiff.morefish.util.IdentityUtils;
 import me.elsiff.morefish.util.SkullUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -89,7 +91,7 @@ public class FishManager {
                 it.set(rarity);
             }
 
-            rarityMap.put(rarity, new ArrayList<CustomFish>());
+            rarityMap.put(rarity, new ArrayList<>());
         }
     }
 
@@ -240,15 +242,6 @@ public class FishManager {
                 int maxHeight = Integer.parseInt(values[2]);
                 condition = new HeightCondition(minHeight, maxHeight);
                 break;
-            case "mcmmo_skill":
-                String skillType = values[1];
-                level = Integer.parseInt(values[2]);
-                condition = new MCMMOSkillCondition(skillType, level);
-                break;
-            case "worldguard_region":
-                String regionId = values[1];
-                condition = new WGRegionCondtion(regionId);
-                break;
             default:
                 return null;
         }
@@ -258,7 +251,9 @@ public class FishManager {
     public CaughtFish generateRandomFish(Player catcher) {
         Rarity rarity = getRandomRarity();
         CustomFish type = getRandomFish(rarity, catcher);
-
+        if (type == null) {
+            return null;
+        }
         return createCaughtFish(type, catcher);
     }
 
@@ -269,6 +264,9 @@ public class FishManager {
     public ItemStack getItemStack(CaughtFish fish, String fisher) {
         ItemStack itemStack = fish.getIcon();
         ItemMeta meta = itemStack.getItemMeta();
+        if (meta == null) {
+            meta = Bukkit.getItemFactory().getItemMeta(itemStack.getType());
+        }
 
         if (!fish.hasNoItemFormat()) {
             FileConfiguration config = plugin.getLocale().getFishConfig();
@@ -349,7 +347,11 @@ public class FishManager {
     }
 
     private CustomFish getRandomFish(Rarity rarity, Player player) {
-        List<CustomFish> list = new ArrayList<>(rarityMap.get(rarity));
+        final val customFish = rarityMap.get(rarity);
+        if (customFish == null) {
+            return null;
+        }
+        List<CustomFish> list = new ArrayList<>(customFish);
 
         Iterator<CustomFish> it = list.iterator();
         while (it.hasNext()) {

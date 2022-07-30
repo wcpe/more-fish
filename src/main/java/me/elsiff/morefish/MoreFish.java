@@ -1,12 +1,16 @@
 package me.elsiff.morefish;
 
 import me.elsiff.morefish.command.GeneralCommands;
-import me.elsiff.morefish.hooker.*;
-import me.elsiff.morefish.listener.*;
+import me.elsiff.morefish.hooker.CitizensHooker;
+import me.elsiff.morefish.hooker.PlaceholderAPIHooker;
+import me.elsiff.morefish.hooker.VaultHooker;
+import me.elsiff.morefish.listener.FishShopGUI;
+import me.elsiff.morefish.listener.FishingListener;
+import me.elsiff.morefish.listener.PlayerListener;
+import me.elsiff.morefish.listener.SignListener;
 import me.elsiff.morefish.manager.BossBarManager;
 import me.elsiff.morefish.manager.ContestManager;
 import me.elsiff.morefish.manager.FishManager;
-import me.elsiff.morefish.protocol.UpdateChecker;
 import org.bukkit.Material;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.plugin.PluginManager;
@@ -22,18 +26,13 @@ public class MoreFish extends JavaPlugin {
     private int taskId = -1;
 
     private Locale locale;
-    private RewardsGUI rewardsGUI;
     private FishShopGUI fishShopGUI;
     private FishManager fishManager;
     private ContestManager contestManager;
     private BossBarManager bossBarManager;
-    private UpdateChecker updateChecker;
-
     private VaultHooker vaultHooker;
     private CitizensHooker citizensHooker;
     private PlaceholderAPIHooker placeholderAPIHooker;
-    private MCMMOHooker mcmmoHooker;
-    private WorldGuardHooker worldGuardHooker;
 
     public static MoreFish getInstance() {
         return instance;
@@ -46,12 +45,8 @@ public class MoreFish extends JavaPlugin {
         saveDefaultConfig();
         this.locale = new Locale(this);
 
-        updateConfigFiles();
-
-        this.rewardsGUI = new RewardsGUI(this);
         this.fishManager = new FishManager(this);
         this.contestManager = new ContestManager(this);
-        this.updateChecker = new UpdateChecker(this);
 
         // For 1.9+
         if (getConfig().getBoolean("general.use-boss-bar") && Material.getMaterial("SHIELD") != null) {
@@ -63,7 +58,6 @@ public class MoreFish extends JavaPlugin {
         manager = getServer().getPluginManager();
         manager.registerEvents(new FishingListener(this), this);
         manager.registerEvents(new PlayerListener(this), this);
-        manager.registerEvents(rewardsGUI, this);
 
         if (manager.getPlugin("Vault") != null && manager.getPlugin("Vault").isEnabled()) {
             vaultHooker = new VaultHooker(this);
@@ -86,48 +80,15 @@ public class MoreFish extends JavaPlugin {
             getLogger().info("Found PlaceholderAPI for placeholders support.");
         }
 
-        if (manager.getPlugin("mcMMO") != null && manager.getPlugin("mcMMO").isEnabled()) {
-            mcmmoHooker = new MCMMOHooker();
-            getLogger().info("Found mcMMO for MCMMO support.");
-        }
-
-        if (manager.getPlugin("WorldGuard") != null && manager.getPlugin("WorldGuard").isEnabled()) {
-            worldGuardHooker = new WorldGuardHooker();
-            getLogger().info("Found WorldGuard for regions support.");
-        }
-
         loadFishShop();
         scheduleAutoRunning();
 
         getLogger().info("Plugin has been enabled!");
     }
-
-    private void updateConfigFiles() {
-        final int verConfig = 210;
-        final int verLang = 211;
-        final int verFish = 212;
-        String msg = locale.getString("old-file");
-        ConsoleCommandSender console = getServer().getConsoleSender();
-
-        if (getConfig().getInt("version") != verConfig) {
-            // Update
-            console.sendMessage(String.format(msg, "config.yml"));
-        }
-
-        if (locale.getLangVersion() != verLang) {
-            // Update
-            console.sendMessage(String.format(msg, locale.getLangPath()));
-        }
-
-        if (locale.getFishVersion() != verFish) {
-            // Update
-            console.sendMessage(String.format(msg, locale.getFishPath()));
-        }
-    }
-
     public void loadFishShop() {
-        if (this.fishShopGUI != null)
+        if (this.fishShopGUI != null) {
             return;
+        }
 
         if (hasEconomy() && getConfig().getBoolean("fish-shop.enable")) {
             this.fishShopGUI = new FishShopGUI(this);
@@ -137,8 +98,9 @@ public class MoreFish extends JavaPlugin {
     }
 
     public void scheduleAutoRunning() {
-        if (taskId != -1)
+        if (taskId != -1) {
             getServer().getScheduler().cancelTask(taskId);
+        }
 
         if (getConfig().getBoolean("auto-running.enable")) {
             final int required = getConfig().getInt("auto-running.required-players");
@@ -147,6 +109,7 @@ public class MoreFish extends JavaPlugin {
             final SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
 
             taskId = getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+                @Override
                 public void run() {
                     String now = dateFormat.format(new Date());
 
@@ -191,10 +154,6 @@ public class MoreFish extends JavaPlugin {
         return (getBossBarManager() != null);
     }
 
-    public UpdateChecker getUpdateChecker() {
-        return updateChecker;
-    }
-
     public String getOrdinal(int number) {
         switch (number) {
             case 1:
@@ -230,9 +189,6 @@ public class MoreFish extends JavaPlugin {
         return builder.toString();
     }
 
-    public RewardsGUI getRewardsGUI() {
-        return rewardsGUI;
-    }
 
     public FishShopGUI getFishShopGUI() {
         return fishShopGUI;
@@ -254,11 +210,4 @@ public class MoreFish extends JavaPlugin {
         return placeholderAPIHooker;
     }
 
-    public MCMMOHooker getMCMMOHooker() {
-        return mcmmoHooker;
-    }
-
-    public WorldGuardHooker getWorldGuardHooker() {
-        return worldGuardHooker;
-    }
 }
